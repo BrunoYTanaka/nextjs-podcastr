@@ -22,7 +22,17 @@
 
 @media(max-width: 920px) {
   .headerContainer {
-    width: 100vw;
+    img {
+      padding-right: 1rem;
+      width: 50%;
+    }
+    p {
+      display: none;
+    }
+    span {
+      padding: 0.25rem 0 0.25rem 2rem;
+      border-left: 1px solid var(--gray-100);
+    }
   }
 }
 
