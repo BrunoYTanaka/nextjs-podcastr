@@ -39,7 +39,6 @@ interface EpisodeProps {
 }
 
 function Episode({ episode }: EpisodeProps):ReactElement {
-
   return (
     <div className={styles.episode}>
       <div className={styles.thumbnailContainer}>
@@ -78,11 +77,22 @@ export default Episode
 
 
 export const getStaticPaths:GetStaticPaths = async () =>{
+  const { data } = await api.get<ResponseData[]>('/episodes',{
+    params: {
+      _limit: 2,
+      _sort: 'published_at',
+      _order:'desc'
+    }
+  })
+
+  const paths = data.map(episode => ({params: { slug: episode.id } }))
+
   return {
-    paths: [],
-    fallback: "blocking"
+    paths,
+    fallback: "blocking" //blocking ssr - true client
   }
 }
+
 
 
 export const getStaticProps:GetStaticProps = async context => {
