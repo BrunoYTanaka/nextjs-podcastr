@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import Head from 'next/head'
 import { GetStaticProps } from 'next'
 import { format, parseISO } from 'date-fns'
 import ptBR from 'date-fns/locale/pt-BR'
@@ -7,8 +8,7 @@ import { api } from 'services/api'
 import { convertDurationToTimeString } from 'utils/convertDurationToTimeString'
 
 import styles from './home.module.scss'
-import { PlayerContext } from 'contexts/PlayerContext'
-import { useContext } from 'react'
+import { usePlayer } from 'contexts/PlayerContext'
 
 type Data = {
   id: string
@@ -40,94 +40,99 @@ interface HomeProps {
   allEpisodes: Episode[]
 }
 
-export default function Home({ latestEpisodes, allEpisodes }:HomeProps) {
+export default function Home({ latestEpisodes, allEpisodes }: HomeProps) {
 
-  const { play } = useContext(PlayerContext)
+  const { playList } = usePlayer()
+
+  const episodeList = [...latestEpisodes, ...allEpisodes]
 
   return (
-   <div className={styles.homePage}>
-     <section className={styles.latestEpisodes}>
-      <h2>
-        Últimos lançamentos
+    <div className={styles.homePage}>
+      <Head>
+        <title>Home | Podcastr </title>
+      </Head>
+      <section className={styles.latestEpisodes}>
+        <h2>
+          Últimos lançamentos
       </h2>
-      <ul>
-        {latestEpisodes.map(episode=>(
-          <li key={episode.id}>
-            <Image
-              src={episode.thumbnail}
-              alt={episode.title}
-              width={192}
-              height={192}
-              objectFit="cover"
-            />
-            <div className={styles.episodeDetails}>
-              <Link href={`/episode/${episode.id}`}>
-                <a>{episode.title}</a>
-              </Link>
-              <p>{episode.members}</p>
-              <span>{episode.publishedAt}</span>
-              <span>{episode.durationAsString}</span>
-            </div>
-            <button type="button" onClick={()=> play(episode)}>
-              <img src="/play-green.svg" alt="Tocar episódio"/>
-            </button>
-          </li>
-        ))}
-      </ul>
-     </section>
-     <section className={styles.allEpisodes}>
-          <h2>Todos episódios</h2>
-          <table cellSpacing={0}>
-            <thead>
-              <tr>
-                <th></th>
-                <th>Podcast</th>
-                <th>Integrantes</th>
-                <th>Data</th>
-                <th>Duração</th>
-                <th></th>
+        <ul>
+          {latestEpisodes.map((episode, index) => (
+            <li key={episode.id}>
+              <Image
+                src={episode.thumbnail}
+                alt={episode.title}
+                width={192}
+                height={192}
+                objectFit="cover"
+              />
+              <div className={styles.episodeDetails}>
+                <Link href={`/episode/${episode.id}`}>
+                  <a>{episode.title}</a>
+                </Link>
+                <p>{episode.members}</p>
+                <span>{episode.publishedAt}</span>
+                <span>{episode.durationAsString}</span>
+              </div>
+              <button type="button" onClick={() => playList(episodeList, index)}>
+                <img src="/play-green.svg" alt="Tocar episódio" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section className={styles.allEpisodes}>
+        <h2>Todos episódios</h2>
+        <table cellSpacing={0}>
+          <thead>
+            <tr>
+              <th></th>
+              <th>Podcast</th>
+              <th>Integrantes</th>
+              <th>Data</th>
+              <th>Duração</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {allEpisodes.map((episode, index) => (
+              <tr key={episode.id}>
+                <td style={{ width: 72 }}>
+                  <Image
+                    width={120}
+                    height={120}
+                    src={episode.thumbnail}
+                    alt={episode.title}
+                    objectFit="cover"
+                  />
+                </td>
+                <td>
+                  <Link href={`/episode/${episode.id}`}>
+                    <a>{episode.title}</a>
+                  </Link>
+                </td>
+                <td>{episode.members}</td>
+                <td style={{ width: 100 }}>{episode.publishedAt}</td>
+                <td>{episode.durationAsString}</td>
+                <td>
+                  <button type="button" onClick={() => playList(episodeList, index + latestEpisodes.length)}>
+                    <img src="/play-green.svg" alt="Tocar episódio" />
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {allEpisodes.map(episode=>(
-                <tr key={episode.id}>
-                  <td style={{width: 72 }}>
-                    <Image
-                      width={120}
-                      height={120}
-                      src={episode.thumbnail}
-                      alt={episode.title}
-                      objectFit="cover"
-                    />
-                  </td>
-                  <td>
-                    <Link href={`/episode/${episode.id}`}>
-                      <a>{episode.title}</a>
-                    </Link>
-                  </td>
-                  <td>{episode.members}</td>
-                  <td style={{width: 100 }}>{episode.publishedAt}</td>
-                  <td>{episode.durationAsString}</td>
-                  <td>
-                    <button type="button">
-                      <img src="/play-green.svg" alt="Tocar episódio"/>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-     </section>
-   </div>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    </div>
   )
 }
 
-export const getStaticProps:GetStaticProps = async () => {
-  const { data }= await api.get<ResponseData>('/episodes',{
+export const getStaticProps: GetStaticProps = async () => {
+  const { data } = await api.get<ResponseData>('/episodes', {
     params: {
       _limit: 12,
       _sort: 'published_at',
-      _order:'desc'
+      _order: 'desc'
     }
   })
 

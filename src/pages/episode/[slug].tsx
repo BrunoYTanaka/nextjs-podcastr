@@ -8,6 +8,8 @@ import { convertDurationToTimeString } from 'utils/convertDurationToTimeString'
 
 import styles from './episode.module.scss'
 import Image from 'next/image'
+import { usePlayer } from 'contexts/PlayerContext'
+import Head from 'next/head'
 
 type ResponseData = {
   id: string
@@ -38,13 +40,17 @@ interface EpisodeProps {
   episode: Episode
 }
 
-function Episode({ episode }: EpisodeProps):ReactElement {
+function Episode({ episode }: EpisodeProps): ReactElement {
+  const { play } = usePlayer()
   return (
     <div className={styles.episode}>
+      <Head>
+        <title>{episode.title}</title>
+      </Head>
       <div className={styles.thumbnailContainer}>
         <Link href="/">
           <button type="button">
-            <img src="/arrow-left.svg" alt="Voltar"/>
+            <img src="/arrow-left.svg" alt="Voltar" />
           </button>
         </Link>
         <Image
@@ -53,8 +59,8 @@ function Episode({ episode }: EpisodeProps):ReactElement {
           src={episode.thumbnail}
           objectFit="cover"
         />
-        <button type="button">
-          <img src="/play.svg" alt="Tocar episódio"/>
+        <button type="button" onClick={() => play(episode)}>
+          <img src="/play.svg" alt="Tocar episódio" />
         </button>
       </div>
 
@@ -66,7 +72,7 @@ function Episode({ episode }: EpisodeProps):ReactElement {
       </header>
 
       <div className={styles.description}
-        dangerouslySetInnerHTML={{__html: episode.description}}
+        dangerouslySetInnerHTML={{ __html: episode.description }}
       />
 
     </div>
@@ -76,16 +82,16 @@ function Episode({ episode }: EpisodeProps):ReactElement {
 export default Episode
 
 
-export const getStaticPaths:GetStaticPaths = async () =>{
-  const { data } = await api.get<ResponseData[]>('/episodes',{
+export const getStaticPaths: GetStaticPaths = async () => {
+  const { data } = await api.get<ResponseData[]>('/episodes', {
     params: {
       _limit: 2,
       _sort: 'published_at',
-      _order:'desc'
+      _order: 'desc'
     }
   })
 
-  const paths = data.map(episode => ({params: { slug: episode.id } }))
+  const paths = data.map(episode => ({ params: { slug: episode.id } }))
 
   return {
     paths,
@@ -95,7 +101,7 @@ export const getStaticPaths:GetStaticPaths = async () =>{
 
 
 
-export const getStaticProps:GetStaticProps = async context => {
+export const getStaticProps: GetStaticProps = async context => {
 
   const { slug } = context.params
 
